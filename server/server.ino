@@ -9,8 +9,6 @@ const char* ssid = "IOT-test";
 const char* password = "";
 
 ESP8266WebServer server(80);
-// DNS server
-const byte DNS_PORT = 53;
 DNSServer dnsServer;
 
 
@@ -21,7 +19,6 @@ const int led = 13;
 
 void handleRoot() {
   digitalWrite(led, 1);
-  
   server.sendHeader("Content-Encoding", "gzip");
   server.send_P(200, "text/html", index_html_gz, index_html_gz_len);
   digitalWrite(led, 0);
@@ -29,8 +26,7 @@ void handleRoot() {
 
 void handleNotFound() {
   digitalWrite(led, 1);
-  String message = "File Not Found\n\n";
-  message += "URI: ";
+  String message = "File Not Found\n\nURI: ";
   message += server.uri();
   message += "\nMethod: ";
   message += (server.method() == HTTP_GET) ? "GET" : "POST";
@@ -47,13 +43,11 @@ void handleNotFound() {
 void setup(void) {
   pinMode(led, OUTPUT);
   digitalWrite(led, 0);
-  Serial.begin(115200);
-  // WiFi.mode(WIFI_AP);
-  // WiFi.begin(ssid, password);
-  WiFi.softAPConfig(apIP, apIP, netMsk);
-  WiFi.softAP("TestIOT","");
 
- 
+  Serial.begin(115200);
+  WiFi.softAPConfig(apIP, apIP, netMsk);
+  WiFi.softAP("TestIOT", "");
+
   Serial.println("");
 
   // Wait for connection
@@ -63,21 +57,20 @@ void setup(void) {
 
   if (MDNS.begin("esp8266")) {
     Serial.println("MDNS responder started");
+  } else {
+    Serial.println("mDNS responder started");
+    // Add service to MDNS-SD
+    MDNS.addService("http", "tcp", 80);
   }
 
   server.on("/", handleRoot);
-
-  server.on("/inline", []() {
-    server.send(200, "text/plain", "this works as well");
-  });
-
   server.onNotFound(handleNotFound);
 
   server.begin();
 
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
-  dnsServer.start(DNS_PORT, "*", apIP);
-  
+  dnsServer.start(53, "*", apIP);
+
   Serial.println("HTTP server started");
 }
 
