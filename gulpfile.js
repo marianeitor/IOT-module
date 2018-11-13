@@ -49,7 +49,7 @@ gulp.task('generarh', ['inline'], function () {
     let data = fs.readFileSync(source);
     wstream.write("#define index_html_gz_len " + data.length + "\n");
 
-    wstream.write("const char index_html_gz[] PROGMEM = {\n");
+    wstream.write("const char index_html_gz[] = {\n");
 
     for (let i = 0; i < data.length; i++) {
         if (i % 30 == 0)
